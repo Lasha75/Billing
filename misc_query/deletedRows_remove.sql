@@ -110,16 +110,29 @@ $$
 
         GET DIAGNOSTICS v_cnt = ROW_COUNT;
         raise notice 'Deleted rows prx_open_transaction: %', v_cnt::text;
-
+---------------------
+        alter
+            table
+            prx_settle_transaction
+            disable trigger
+                all;
         delete
 --         select count(*)
         from prx_settle_transaction
         where deleted_date is not null
-        and deleted_date::date <'2023-10-01';
+        and deleted_date::date <'2024-01-01';
+
+
+        alter
+            table
+            prx_settle_transaction
+            enable trigger
+                all;
+
 
         GET DIAGNOSTICS v_cnt = ROW_COUNT;
         raise notice 'Deleted rows prx_settle_transaction: %', v_cnt::text;
-
+--------------------------
         delete
         from prx_transaction
         where deleted_date is not null;

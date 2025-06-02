@@ -1,0 +1,245 @@
+-- Drop and create temporary table for payments
+drop table if exists payment_temp;
+create temp TABLE payment_temp
+(
+    number    bigint,
+    startDate date,
+    endDate   date,
+    blockId   UUID
+);
+-- Create a CTE for retrieving block schedules
+WITH subquery2
+         AS (SELECT ROW_NUMBER()
+                    OVER (PARTITION BY PRX_BLOCK_SCHEDULE.BLOCK_ID_ID ORDER BY PRX_BLOCK_SCHEDULE.READ_DATE DESC) AS number,
+                    PRX_BLOCK_SCHEDULE.READ_DATE,
+                    PRX_BLOCK_SCHEDULE.BLOCK_ID_ID
+             FROM PRX_BLOCK_SCHEDULE
+             WHERE PRX_BLOCK_SCHEDULE.READ_DATE IS NOT NULL
+               AND PRX_BLOCK_SCHEDULE.DELETED_DATE IS NULL
+               AND PRX_BLOCK_SCHEDULE.READ_DATE <= NOW())
+INSERT
+INTO payment_temp (number, startDate, endDate, blockId)
+SELECT t1.number,
+       t2.READ_DATE   AS startDate,
+       t1.READ_DATE   AS endDate,
+       t1.BLOCK_ID_ID AS blockId
+FROM subquery2 t1
+LEFT JOIN subquery2 t2
+          ON t2.number = t1.number + 1
+              AND t1.BLOCK_ID_ID = t2.BLOCK_ID_ID;
+
+-- Update startDate for specific records
+UPDATE payment_temp
+SET startDate = DATE_TRUNC('month', startDate::date) + INTERVAL '1 MONTH'
+WHERE number = 13;
+
+ANALYZE payment_temp;
+
+-- Drop and create temporary table for beneficiary data
+drop table if exists beneficiaryData;
+create temp TABLE beneficiaryData
+(
+    customer  UUID,
+    startDate date
+);
+
+CREATE INDEX idx_customer_beneficiaryData ON beneficiaryData (customer);
+
+-- Retrieve relevant block schedule data
+WITH subquery AS (SELECT *
+                  FROM (SELECT ROW_NUMBER()
+                               OVER (PARTITION BY prx_block_schedule.block_id_id ORDER BY prx_block_schedule.read_date DESC) AS number,
+                               prx_block_schedule.read_date,
+                               prx_block_schedule.block_id_id
+                        FROM prx_block_schedule
+                        WHERE prx_block_schedule.read_date IS NOT NULL
+                          AND prx_block_schedule.deleted_date IS NULL
+                          AND prx_block_schedule.read_date <= NOW()) data
+                  WHERE data.number <= 13
+                    AND data.number > 1),
+     custInfo AS (SELECT COALESCE(benef.customer_id, proper.customer_id) AS customer_id,
+                         GREATEST(benef.start_date, proper.start_date)   AS start_date,
+                         CASE
+                             WHEN benef.start_date IS NULL AND proper.start_date IS NOT NULL THEN TRUE
+                             WHEN benef.start_date IS NOT NULL AND proper.start_date IS NULL THEN FALSE
+                             WHEN benef.start_date < proper.start_date THEN TRUE
+                             ELSE FALSE
+                             END                                         AS isproper
+                  FROM (SELECT prx_beneficiary_information.customer_id,
+                               MAX(prx_beneficiary_information.start_date) AS start_date,
+                               MAX(prx_beneficiary_information.end_date)   AS end_date
+                        FROM prx_beneficiary_information
+                        WHERE prx_beneficiary_information.deleted_date IS NULL
+                          AND (prx_beneficiary_information.end_date IS NULL OR
+                               prx_beneficiary_information.end_date > CURRENT_DATE)
+                        GROUP BY prx_beneficiary_information.customer_id) benef
+                  FULL JOIN (SELECT prx_proprietor_information.customer_id,
+                                    MAX(prx_proprietor_information.start_date) AS start_date,
+                                    MAX(prx_proprietor_information.end_date)   AS end_date
+                             FROM prx_proprietor_information
+                             WHERE prx_proprietor_information.deleted_date IS NULL
+                               AND (prx_proprietor_information.end_date IS NULL OR
+                                    prx_proprietor_information.end_date > CURRENT_DATE)
+                             GROUP BY prx_proprietor_information.customer_id) proper
+                            ON benef.customer_id = proper.customer_id
+                  WHERE data.isproper IS TRUE)
+INSERT
+INTO beneficiaryData (customer, startDate)
+SELECT data.customer_id,
+       MIN(read_date)
+FROM subquery
+LEFT JOIN (SELECT custInfo.customer_id,
+                  MAX(custInfo.start_date) AS enterdate,
+                  block_id
+           FROM custInfo
+           LEFT JOIN (SELECT prx_customer_contract.customer_id,
+                             prx_counter.block_id
+                      FROM prx_counter
+                      LEFT JOIN prx_customer_contract ON prx_counter.contract_id = prx_customer_contract.id AND
+                                                         prx_customer_contract.deleted_date IS NULL
+                      WHERE prx_counter.deleted_date IS NULL
+                      GROUP BY prx_customer_contract.customer_id, prx_counter.block_id) block
+                     ON block.customer_id = custInfo.customer_id
+           GROUP BY custInfo.customer_id, block_id) data ON subquery.block_id_id = data.block_id
+    AND data.enterdate <= read_date
+GROUP BY data.customer_id, data.block_id;
+
+-- Adjust start dates
+UPDATE beneficiarydata
+SET startDate = DATE_TRUNC('month', startDate::date) + INTERVAL '1 MONTH';
+
+-- ANALYZE beneficiarydata;
+
+INSERT INTO PRX_OVERDUE_PAYMENT_REPORT (
+    ID, CUSTOMER, CUSTOMER_NUMBER, CUSTOMER_CODE, CUSTOMER_NAME, BLOCK, CATERORY, CUST_CATEGORY,
+    ACTIVITY, BLOCK_ID, DATE, DUE_DATE, trans_date, AMOUNT, NUMBER, CREATED_BY, CREATED_DATE, AVERAGE, WARNING_SENT
+)
+WITH subquery2 AS (
+    SELECT
+        ROW_NUMBER() OVER (PARTITION BY PRX_BLOCK_SCHEDULE.block_id_id
+            ORDER BY PRX_BLOCK_SCHEDULE.READ_DATE DESC) AS number,
+        PRX_BLOCK_SCHEDULE.READ_DATE,
+        PRX_BLOCK_SCHEDULE.block_id_id
+    FROM PRX_BLOCK_SCHEDULE
+    WHERE PRX_BLOCK_SCHEDULE.READ_DATE IS NOT NULL
+    AND PRX_BLOCK_SCHEDULE.DELETED_DATE IS NULL
+    AND PRX_BLOCK_SCHEDULE.READ_DATE <= CURRENT_TIMESTAMP
+    ORDER BY PRX_BLOCK_SCHEDULE.block_id_id, PRX_BLOCK_SCHEDULE.READ_DATE DESC
+),
+    subquery AS (SELECT c.CUSTOMER_ID,
+                        c.CUSTOMER_NUMBER,
+                        c.CUSTOMER_CODE,
+                        c.FULL_NAME,
+                        PRX_BLOCK.NAME                                      AS blockName,
+                        PRX_CATEGORY.NAME                                   AS categoryName,
+                        PRX_CUSTOMER_CATEGORY.NAME                          AS custCategory,
+                        PRX_ACTIVITY.NAME                                   AS activity,
+                        PRX_BLOCK.ID                                        AS blockId,
+                        MAX(PRX_OVERDUE_DEPOSIT_NOTIFICATIONS.OVERDUE_DATE) AS notificationDate
+                 FROM (SELECT PRX_CUSTOMER.CUSTOMER_NUMBER  AS CUSTOMER_NUMBER,
+                              PRX_CUSTOMER.CUSTOMER_CODE    AS CUSTOMER_CODE,
+                              PRX_CUSTOMER.FULL_NAME        AS FULL_NAME,
+                              PRX_CUSTOMER.ID               AS CUSTOMER_ID,
+                              PRX_CUSTOMER.CUST_CATEGORY_ID AS CUST_CATEGORY_ID,
+                              PRX_CUSTOMER.CATEGORY_ID      AS CATEGORY_ID,
+                              PRX_CUSTOMER.ACTIVITY_ID      AS ACTIVITY_ID
+                       FROM PRX_CUSTOMER
+                       WHERE PRX_CUSTOMER.STATUS_ID = :customerStatus
+                         AND PRX_CUSTOMER.ID NOT IN (SELECT PRX_DEPOSIT_CUST_TABLE.CUSTOMER_ID
+                                                     FROM PRX_DEPOSIT_CUST_TABLE
+                                                     WHERE PRX_DEPOSIT_CUST_TABLE.STATUS = 'APPROVED'
+                                                       AND PRX_DEPOSIT_CUST_TABLE.DELETED_DATE IS NULL)
+                         AND (PRX_CUSTOMER.social_category_multi_child_family IS NULL OR
+                              PRX_CUSTOMER.social_category_multi_child_family = FALSE)
+                         AND (PRX_CUSTOMER.social_category_pensioner IS NULL OR
+                              PRX_CUSTOMER.social_category_pensioner = FALSE)
+                         AND (PRX_CUSTOMER.SOCIAL_MUNICIPALITY IS NULL OR PRX_CUSTOMER.SOCIAL_MUNICIPALITY = FALSE)
+                         AND (PRX_CUSTOMER.social_category_socially_unsecured IS NULL OR
+                              PRX_CUSTOMER.social_category_socially_unsecured = FALSE)
+                         AND PRX_CUSTOMER.ID NOT IN (SELECT PRX_CUSTOMER_CONTRACT.CUSTOMER_ID
+                                                     FROM PRX_CUSTOMER_CONTRACT
+                                                     WHERE PRX_CUSTOMER_CONTRACT.STATUS_ID = :contractStatus
+                                                       AND PRX_CUSTOMER_CONTRACT.TYPE_ID = :depositContract
+                                                       AND PRX_CUSTOMER_CONTRACT.DELETED_DATE IS NULL)) c
+                 LEFT JOIN public."CustomerBlock" block ON block.CUSTOMER_ID = c.CUSTOMER_ID
+                 LEFT JOIN PRX_CATEGORY ON c.CUST_CATEGORY_ID = PRX_CATEGORY.ID
+                 LEFT JOIN PRX_CUSTOMER_CATEGORY ON c.CATEGORY_ID = PRX_CUSTOMER_CATEGORY.ID
+                 LEFT JOIN PRX_BLOCK ON block.maxBlockId = PRX_BLOCK.ID
+                 LEFT JOIN PRX_ACTIVITY ON c.ACTIVITY_ID = PRX_ACTIVITY.ID
+                 LEFT JOIN PRX_OVERDUE_DEPOSIT_NOTIFICATIONS
+                           ON PRX_OVERDUE_DEPOSIT_NOTIFICATIONS.CUST_NUMBER_ID = c.CUSTOMER_ID
+                 WHERE PRX_BLOCK.NAME IS NOT NULL
+                   AND block.maxBlockId = :blockID
+                 GROUP BY c.CUSTOMER_ID, c.CUSTOMER_NUMBER, c.CUSTOMER_CODE, c.FULL_NAME, PRX_BLOCK.NAME,
+                          PRX_CATEGORY.NAME, PRX_CUSTOMER_CATEGORY.NAME, PRX_ACTIVITY.NAME, PRX_BLOCK.ID),
+    transaction_data AS (SELECT prx_transaction.customer_id           AS customer,
+                                prx_transaction.due_date              AS dueDate,
+                                MIN(prx_transaction.trans_date)       AS transDate,
+                                COALESCE(SUM(prx_transaction.amount)) AS amount
+                         FROM prx_transaction
+                         JOIN PRX_TRANSACTION_TYPE_COMBINATI
+                              ON PRX_TRANSACTION_TYPE_COMBINATI.ID = prx_transaction.TRANS_TYPE_COMBINATION_ID
+                         LEFT JOIN PRX_DELAYER ON PRX_DELAYER.DELETED_DATE IS NULL
+                             AND (PRX_DELAYER.STATUS = 'ACTIVE' OR PRX_DELAYER.STATUS = 'FINISHED')
+                             AND PRX_DELAYER.START_DATE <= prx_transaction.due_date
+                             AND PRX_DELAYER.END_DATE >= prx_transaction.due_date
+                             AND PRX_DELAYER.CUSTOMER_ID = prx_transaction.customer_id
+                         WHERE prx_transaction.USED_IN_BILL
+                           AND prx_transaction.INVOICE_DATE <= prx_transaction.DUE_DATE
+                           AND prx_transaction.DELETED_DATE IS NULL
+                           AND prx_transaction.Amount > 0
+                           AND prx_transaction.DUE_DATE IS NOT NULL
+                           AND prx_transaction.DUE_DATE > :periodEndDate
+                           AND prx_transaction.INVOICE_DATE < :periodMaxDate
+                           AND prx_transaction.ACCOUNT_TYPE_ID = :accountType
+                           AND PRX_DELAYER.ID IS NULL
+                         GROUP BY prx_transaction.customer_id, prx_transaction.due_date)
+SELECT gen_random_uuid() AS recId,
+       subquery.CUSTOMER_ID,
+       CUSTOMER_NUMBER,
+       CUSTOMER_CODE,
+       FULL_NAME,
+       blockName,
+       categoryName,
+       custCategory,
+       activity,
+       blockId,
+       notificationDate,
+       t.dueDate,
+       t.transDate,
+       t.amount,
+       ROW_NUMBER() OVER (PARTITION BY t.customer, t.amount > 0 ORDER BY t.dueDate DESC),
+       :usercode,
+       CURRENT_TIMESTAMP,
+       data.amount,
+       subquery.notificationDate >= t.dueDate
+FROM transaction_data t
+LEFT JOIN subquery ON subquery.CUSTOMER_ID = t.customer
+LEFT JOIN (SELECT customerNumber,
+                  ROUND(SUM(amount) / COUNT(DISTINCT number), 2) AS amount
+           FROM (SELECT beneficiarydata.customer    AS customerNumber,
+                        SUM(PRX_TRANSACTION.AMOUNT) AS amount,
+                        sMin.number                 AS number
+                 FROM beneficiarydata
+                 LEFT JOIN public."CustomerBlock" block ON block.CUSTOMER_ID = beneficiarydata.customer
+                 LEFT JOIN payment_temp sMin ON sMin.blockId = block.minBlockId
+                     AND sMin.number <= 13 AND sMin.number > 1
+                 LEFT JOIN payment_temp sMax ON sMax.blockId = block.maxBlockId
+                     AND sMax.number <= 13 AND sMax.number > 1 AND sMin.number = sMax.number
+                     AND sMax.blockId = :blockID
+                 JOIN PRX_TRANSACTION ON PRX_TRANSACTION.DELETED_DATE IS NULL
+                     AND PRX_TRANSACTION.CUSTOMER_ID = beneficiarydata.customer
+                     AND ((sMin.number = 13 AND PRX_TRANSACTION.INVOICE_DATE > sMin.startDate)
+                         OR (sMin.number < 13 AND PRX_TRANSACTION.INVOICE_DATE > sMax.startDate))
+                     AND PRX_TRANSACTION.INVOICE_DATE <= sMax.endDate
+                     AND PRX_TRANSACTION.USED_IN_BILL
+                     AND PRX_TRANSACTION.TRANS_TYPE_COMBINATION_ID IN (SELECT TYPE_ID
+                                                                       FROM PRX_DEPOSIT_TRANSACTION_TYPE_COMBINATION
+                                                                       WHERE DELETED_DATE IS NULL)
+                     AND PRX_TRANSACTION.INVOICE_DATE >= COALESCE(beneficiarydata.startDate, '1999-01-01')
+                 GROUP BY beneficiarydata.customer, sMin.number
+                 HAVING SUM(PRX_TRANSACTION.AMOUNT) != 0) a
+           GROUP BY customerNumber) data ON data.customerNumber = CUSTOMER_ID;
+
+
+

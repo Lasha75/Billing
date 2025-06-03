@@ -36,8 +36,8 @@ from prx_customer cu
 where tr.customer_id = cu.id
   and tr.deleted_by is null
   and tr.category_id is null
-  and (tr.created_date between '2025-05-04' and '2025-06-01' or
-       tr.trans_date between '2025-05-04' and '2025-06-01')
+  and (tr.created_date between '2025-04-04' and '2025-06-01' or
+       tr.trans_date between '2025-04-04' and '2025-06-01')
 --   and tr.created_by = 'mppower'
   and cu.category_id is not null;
 
@@ -93,8 +93,8 @@ where str.customer_id = cu.id
   and str.deleted_by is null
   and str.category_id is null
   and str.amount < 0
-  and (str.created_date between '2025-05-04' and '2025-06-05'
-       or str.trans_date between '2025-05-04' and '2025-06-05')
+  and (str.created_date between '2025-04-04' and '2025-06-05'
+       or str.trans_date between '2025-04-04' and '2025-06-05')
 
 /*and cu.category_id is not null*/;
 -- and tr.customer_number='5194924'

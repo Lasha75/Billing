@@ -29,7 +29,7 @@ select pm.bank_id,
         pm.telmico_amount,
         pm.telasi_amount
 from prx_payment pm
-where pm.payment_id in ('27445916545');--pm.internal_bank_id = 'LB' and reporting_date = '2025-03-08';--pm.payment_id in ('1');-- --
+where pm.payment_id in ('27579056392');--pm.internal_bank_id = 'LB' and reporting_date = '2025-03-08';--pm.payment_id in ('1');-- --
 
 
 
@@ -53,7 +53,7 @@ select tr.bank_code,
        tr.customer_number,
        id
 from prx_transaction tr
-where tr.payment_doc_number in ('27445916545')--tr.bank_code = 'LB' and reporting_date = '2025-03-27'--
+where tr.payment_doc_number in ('27579056392')--tr.bank_code = 'LB' and reporting_date = '2025-03-27'--
 and tr.deleted_by is null;
 --
 /*update prx_transaction

@@ -1,3 +1,3 @@
 begin;
-call "LK".prc_bill_delete('8253301', '2025-04-30');
+call "LK".prc_bill_delete('4663689', '2025-06-03', null, null);
 commit;

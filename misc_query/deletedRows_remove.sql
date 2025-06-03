@@ -120,8 +120,10 @@ $$
 --         select count(*)
         from prx_settle_transaction
         where deleted_date is not null
-        and deleted_date::date <'2024-01-01';
+        /*and deleted_date::date <'2024-01-01'*/;
 
+        GET DIAGNOSTICS v_cnt = ROW_COUNT;
+        raise notice 'Deleted rows prx_settle_transaction: %', v_cnt::text;
 
         alter
             table
@@ -130,16 +132,28 @@ $$
                 all;
 
 
-        GET DIAGNOSTICS v_cnt = ROW_COUNT;
-        raise notice 'Deleted rows prx_settle_transaction: %', v_cnt::text;
+
 --------------------------
+
+         alter
+            table
+            prx_transaction
+            disable trigger
+                all;
         delete
+        --select count(*)
         from prx_transaction
-        where deleted_date is not null;
+        where deleted_date is not null
+        /*and deleted_date::date <='2024-01-01'*/;
 
         GET DIAGNOSTICS v_cnt = ROW_COUNT;
         raise notice 'Deleted rows: %', v_cnt::text;
 
+        alter
+            table
+            prx_transaction
+            enable trigger
+                all;
 
     exception
         when others then

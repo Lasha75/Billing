@@ -47,24 +47,23 @@ with supl_contr as (select customer_id,
                   group by customer_id),
       no_ovd_pmnt as (select * from "LK".fn_overdue_payment()),
 --     no_ovd_pmnt as (select  * from "LK".lk_overdue_payment_report),
+     cnt as (select count(id)                                            qua,
+                    customer_id,
+                    sum(case
+                        when coalesce(tr.kilowatt_hour, 0) != 0
+                            then coalesce(tr.kilowatt_hour, 0) else 0 end) charge_kwt,
+                    sum(case
+                        when coalesce(tr.amount, 0) != 0 and coalesce(tr.kilowatt_hour, 0) != 0
+                            then coalesce(tr.amount, 0) else 0 end)        charge_amount
+             from prx_transaction tr
+             where tr.read_date between current_date - interval '1 YEAR' and current_date
+               and tr.deleted_by is null
+               and (coalesce(tr.amount, 0) != 0 and coalesce(tr.kilowatt_hour, 0) != 0)
+             group by tr.customer_id),
      avg_charge as (select customer_id,
-                           sum(charge_kwt) avg_kwt,
-                           sum(charge_amount) avg_amt
-                    from (select tr.customer_id,
-                                 case
-                                     when coalesce(tr.kilowatt_hour, 0) != 0
-                                         then sum(coalesce(tr.kilowatt_hour, 0)) / 12 end charge_kwt,
-                                 case
-                                     when coalesce(tr.amount, 0) != 0 and coalesce(tr.kilowatt_hour, 0) != 0
-                                         then sum(coalesce(tr.amount, 0)) / 12 end        charge_amount
-                          from prx_transaction tr
-                          where tr.read_date between current_date - interval '1 YEAR' and current_date
-                            and tr.deleted_by is null
---                   and (coalesce(tr.kilowatt_hour, 0) != 0 or (coalesce(tr.kilowatt_hour, 0) != 0 and coalesce(tr.amount, 0) != 0))
-                          group by tr.customer_id,
-                                   tr.kilowatt_hour,
-                                   tr.amount) t
-                    group by customer_id),
+                           charge_kwt/nullif(qua,0) avg_kwt,
+                           charge_amount/nullif(qua,0) avg_amt
+                    from cnt),
      own_id as (SELECT distinct customer_id,
                                 regexp_replace(COALESCE(NULLIF(personal_id, ''), tax_id), '[\x00-\x1F\x7F]', '',
                                                'g') AS ow_id

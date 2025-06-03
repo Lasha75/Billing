@@ -6,8 +6,8 @@ create temp table upd on commit drop as
      join prx_customer cu on cu.customer_number = tr.customer_number
      join prx_counter met on met.cust_key = cu.cust_key and tr.counter_number = met.code
 --      join "LK".tmp_lk t on t.cust_id = tr.customer_id
-     where (tr.created_date between  '2025-05-04' and '2025-06-05' or
-           tr.trans_date between  '2025-05-04' and '2025-06-05')
+     where (tr.created_date between  '2025-04-04' and '2025-06-05' or
+           tr.trans_date between  '2025-04-04' and '2025-06-05')
        and tr.deleted_by is null
        and coalesce(tr.voltage, '0')='0'
        and coalesce(tr.kilowatt_hour, 0) !=0
@@ -39,8 +39,8 @@ set voltage = tr.voltage
 from prx_transaction tr
 -- join "LK".tmp_lk t on t.cust_id = tr.customer_id
 where tr.id = otr.transaction_id
-  and (tr.created_date between  '2025-05-04' and '2025-06-02' or
-       tr.trans_date between  '2025-05-04' and '2025-06-02')
+  and (tr.created_date between  '2025-04-04' and '2025-06-02' or
+       tr.trans_date between  '2025-04-04' and '2025-06-02')
   and coalesce(otr.voltage, '0')='0'
   and coalesce(tr.kilowatt_hour, 0) !=0
   and coalesce(tr.amount,0) >0
@@ -66,8 +66,8 @@ where tr.id = str.transaction_id
   and coalesce(str.voltage, '0')='0'
   and coalesce(tr.kilowatt_hour, 0) !=0
   and coalesce(tr.amount,0) > 0
-    and (str.trans_date between '2025-05-04' and '2025-06-02' or
-         str.created_date between '2025-05-04' and '2025-06-02')
+    and (str.trans_date between '2025-04-04' and '2025-06-02' or
+         str.created_date between '2025-04-04' and '2025-06-02')
 --    and tr.created_by = 'mppower'
   and str.amount > 0;
 

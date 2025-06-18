@@ -28,9 +28,9 @@ begin
            cur."START_DATE",
            cur."END_DATE",
            cur."ENTER_DATE",
-           "COMPANY_ID"
-    from prx_customer cu
-    join "LK".lk_f_customer_rental cur on cur."CUSTKEY" = cu.cust_key
+           cur."COMPANY_ID"
+    from public.prx_customer cu
+    right join "LK".lk_f_customer_rental cur on cur."CUSTKEY" = cu.cust_key
     where cu.deleted_by is null;
 
 exception

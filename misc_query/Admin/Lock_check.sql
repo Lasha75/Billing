@@ -23,3 +23,8 @@ JOIN pg_catalog.pg_locks blocking_locks
          AND blocking_locks.pid != blocked_locks.pid
 JOIN pg_catalog.pg_stat_activity blocking_activity ON blocking_activity.pid = blocking_locks.pid
 WHERE NOT blocked_locks.GRANTED;
+
+
+
+select *
+from dba_locks;

@@ -50,7 +50,10 @@ create temp TABLE temp_tb
 );
 
 insert INTO temp_tb(customer_id, prevrealdate, prevrealreading, counter_number)
-select a.customer_id, a.prevrealdate, a.prevrealreading, a.counter_number
+select a.customer_id,
+       a.prevrealdate,
+       a.prevrealreading,
+       a.counter_number
 FROM public.TransactionLastRecordDataVW a;
 
 UPDATE public.prx_circular_accural C

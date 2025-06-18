@@ -53,7 +53,7 @@ FROM pg_stat_activity
 WHERE state = 'active';
 
 
-select * from pg_foreign_server
+select * from pg_foreign_server;
 
 SHOW server_version;
 SELECT version();
@@ -61,3 +61,63 @@ SELECT version();
 -------columns list
 SELECT column_name FROM information_schema.columns
 WHERE table_name = 'prx_transaction';
+
+----------index
+SELECT indexname, indexdef
+FROM pg_indexes
+where tablename='prx_rect_message';
+
+SELECT schemaname, relname, indexrelname, idx_scan
+FROM pg_stat_all_indexes
+WHERE schemaname = 'public' and relname='prx_rect_message'
+ORDER BY idx_scan;
+
+SELECT
+    relname AS table_name,
+    indexrelname AS index_name,
+    idx_scan AS times_used,
+    idx_tup_read AS rows_read,
+    idx_tup_fetch AS rows_fetched
+FROM
+    pg_stat_user_indexes
+JOIN
+    pg_index ON pg_stat_user_indexes.indexrelid = pg_index.indexrelid
+WHERE
+    schemaname = 'public' and relname='prx_customer'
+ORDER BY
+    idx_scan ASC;
+
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT * FROM prx_rect_message WHERE phone_number ilike '%57458954%';
+
+SELECT stats_reset
+FROM pg_stat_database
+WHERE datname = current_database();--statistics last reset
+
+
+select * from pg_stat_statements;
+---------------locks
+select *
+from
+dba_locks;
+
+SELECT pid, locktype, relation::regclass, mode, granted
+FROM pg_locks
+WHERE NOT granted;
+
+
+
+
+
+
+
+CREATE INDEX idx_prx_customer_name_trgm ON public.prx_customer USING GIN (name gin_trgm_ops);
+
+SELECT * FROM pg_stat_progress_create_index;
+
+
+DROP INDEX CONCURRENTLY IF EXISTS idx_customer;
+
+DROP INDEX CONCURRENTLY IF EXISTS idx_customer_ccold;
+
+

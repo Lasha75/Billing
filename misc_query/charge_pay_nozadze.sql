@@ -1,7 +1,7 @@
 with charge as (select tr.customer_id,
                        sum(tr.amount) charge_amount
                 from prx_transaction tr
-                where tr.read_date between '01-feb-2024' and '29-feb-2024'
+                where tr.read_date between '01-feb-2024' and '29-jun-2025'
                   and tr.deleted_by is null
                   and tr.trans_type_combination_id in ('de579ca8-118d-0f99-1012-c2e6b3a02307',
                                                        'ce5ae29e-cf2a-1053-e58e-c16bf1063670',

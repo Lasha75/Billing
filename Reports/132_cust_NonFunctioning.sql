@@ -81,7 +81,7 @@ LEFT JOIN (SELECT ad.street,
            from prx_customer_address ad
            where ad.deleted_by IS null) adr ON adr.customer_id = cu.id AND adr.rn = 1
 where cu.deleted_by is null /*and cu.customer_number='5343372'*/
-  and lower(cu.name) like N'%შეწყვეტილი ფუნქციონირება%';
+  and cu.name ilike N'%შეწყვეტილი ფუნქციონირება%';
 
 
 

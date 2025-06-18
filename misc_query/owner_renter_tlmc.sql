@@ -16,6 +16,9 @@ left join prx_owner_type ownt on own.owner_type_id = ownt.id
 where own.deleted_by is null;
 
 /*renter*/
-select *
+select cu.customer_number, ot.name, pbi.*
 from prx_beneficiary_information pbi
-where pbi.deleted_by is null;
+left join public.prx_customer cu on pbi.customer_id = cu.id
+left join prx_owner_type ot on pbi.owner_type_id = ot.id
+where pbi.deleted_by is null
+and cu.deleted_by is null;

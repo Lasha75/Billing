@@ -9,7 +9,7 @@ set status= case trim(status)
                 when 'არაიდენტიფიცირებული' then 'UNIDENTIFIED'
     end
 where id >= 1;
---------
+----------------------
 select cu.deleted_by,
        cu.deleted_date,
        cu.customer_number,

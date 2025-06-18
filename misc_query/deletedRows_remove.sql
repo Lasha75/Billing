@@ -7,17 +7,21 @@ $$
         create table "LK".lk_trans_deleted as
         select *
         from prx_transaction
-        where deleted_by is not null;
+        where deleted_by is not null
+        and created_date between current_date - interval '3 YEARS' and current_date ;
 
         create table "LK".lk_open_trans_deleted as
         select *
         from "Billing_TestDB".public.prx_open_transaction
-        where deleted_by is not null;
+        where deleted_by is not null
+        and created_date between current_date - interval '3 YEARS' and current_date;
 
         create table "LK".lk_settle_trans_deleted as
         select *
         from "Billing_TestDB".public.prx_settle_transaction
-        where deleted_by is not null;
+        where deleted_by is not null
+        and created_date between current_date - interval '3 YEARS' and current_date;
+------------------------------------------------------
 
 
         SELECT string_agg('tr.' || quote_ident(column_name), ', ')
@@ -37,7 +41,8 @@ $$
         WHERE table_schema = 'public'
           AND table_name = 'prx_settle_transaction'
           AND column_name <> 'id';
----------------------------------------
+
+
         with tr as (select tr.category_id, tr.customer_id, tr.customer_number, tr.account_number, tr.account_type_id, tr.amount, tr.consumption, tr.bank_code, tr.bank_trans_code, tr.block_id, tr.block_name, tr.category_name, tr.chatge_type, tr.trans_date, tr.due_date, tr.counter_number, tr.counter_reading_value, tr.counter_prev_reading_value, tr.counter_serial_number, tr.parent_customer_number, tr.payment_doc_number, tr.route_id, tr.route_name, tr.tariff_number,
                tr.trans_type_combination_id, tr.comment_, tr.deposit_type, tr.version, tr.created_by, tr.created_date, tr.last_modified_by, tr.last_modified_date, tr.deleted_by, tr.deleted_date, tr.bank_guarantee_end_date, tr.bank_guarantee_number, tr.bank_guarantee_start_date,
                tr.tariff_id, tr.value_, tr.invoice_date, tr.invoice_is_written, tr.kilowatt_hour, tr.used_in_bill, tr.used_in_check, tr.cycle_type, tr.read_date, tr.prev_read_date, tr.prev_real_date, tr.invoice_id, tr.parent_id, tr.tl_acc_key, tr.tl_acc_tar_key,
@@ -46,7 +51,8 @@ $$
                tr.is_mp_charge, tr.step, tr.view_detail_connection_id, tr.aviso_date, tr.bank_account, tr.bank_operation_type, tr.reporting_date, tr.restructurization_header_id, tr.activity_id, tr.give_type_id, tr.vat_type, tr.voltage
         from prx_transaction tr
         left join "LK".lk_trans_deleted dl on dl.id = tr.id
-        where tr.deleted_by is not null  and dl.id is null)
+        where tr.deleted_by is not null  and dl.id is null
+        and tr.created_date between current_date - interval '3 YEARS' and current_date)
 
         insert
         into "LK".lk_trans_deleted (category_id, customer_id, customer_number, account_number, account_type_id, amount,
@@ -73,11 +79,14 @@ $$
         GET DIAGNOSTICS v_cnt = ROW_COUNT;
         raise notice 'Inserted rows lk_trans_deleted: %', v_cnt::text;
 
+
+
         with otr as (select *
                      from public.prx_open_transaction otr
                      left join "LK".lk_open_trans_deleted dl on dl.id = otr.id
                      where otr.deleted_by is not null
-                       and dl.id is null)
+                       and dl.id is null
+                     and otr.created_date between current_date - interval '3 YEARS' and current_date)
         insert
         into "LK".lk_open_trans_deleted
         select *
@@ -88,11 +97,13 @@ $$
         raise notice 'Inserted rows lk_open_trans_deleted: %', v_cnt::text;
 
 
+
         with str as (select *
-                     from public.prx_settle_transaction otr
-                     left join "LK".lk_settle_trans_deleted dl on dl.id = otr.id
-                     where otr.deleted_by is not null
-                       and dl.id is null)
+                     from public.prx_settle_transaction str
+                     left join "LK".lk_settle_trans_deleted dl on dl.id = str.id
+                     where str.deleted_by is not null
+                       and dl.id is null
+                     and str.created_date between current_date - interval '3 YEARS' and current_date)
         insert
         into "LK".lk_settle_trans_deleted
         select *
@@ -122,8 +133,8 @@ $$
         where deleted_date is not null
         /*and deleted_date::date <'2024-01-01'*/;
 
-        GET DIAGNOSTICS v_cnt = ROW_COUNT;
-        raise notice 'Deleted rows prx_settle_transaction: %', v_cnt::text;
+/*        GET DIAGNOSTICS v_cnt = ROW_COUNT;
+        raise notice 'Deleted rows prx_settle_transaction: %', v_cnt::text;*/
 
         alter
             table
@@ -145,9 +156,9 @@ $$
         from prx_transaction
         where deleted_date is not null
         /*and deleted_date::date <='2024-01-01'*/;
-
+/*
         GET DIAGNOSTICS v_cnt = ROW_COUNT;
-        raise notice 'Deleted rows: %', v_cnt::text;
+        raise notice 'Deleted rows: %', v_cnt::text;*/
 
         alter
             table

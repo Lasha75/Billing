@@ -11,6 +11,6 @@ and cu.deleted_by is null
 
 update prx_beneficiary_information bi
 set deleted_by = 'lkhvichia',
-    deleted_date = '2025-05-31'
+    deleted_date = current_date
 from upd
 where upd.id = bi.id

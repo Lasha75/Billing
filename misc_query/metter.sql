@@ -3,8 +3,9 @@ with met(num) as(values ('4004776'))
 select distinct cu.customer_number num,
        st.name            stat,
        met.serial_number  met,
-       mett.name,
+       mett.name met_type,
        met.created_date,
+       met.id,
        met.*
 from public.prx_customer cu
 join met m on m.num = cu.customer_number

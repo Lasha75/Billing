@@ -6,7 +6,7 @@ FROM prx_counter met
 JOIN prx_customer_contract cuc ON met.contract_id = cuc.id AND cuc.deleted_date IS NULL
 JOIN prx_block bl ON met.block_id = bl.id
 join prx_customer  cu on cuc.customer_id = cu.id and cu.deleted_by is null
-join cust c on cu.customer_number = c.cu_numb
+-- join cust c on cu.customer_number = c.cu_numb
         WHERE met.deleted_date IS NULL
                   AND met.block_id IS NOT NULL;
 

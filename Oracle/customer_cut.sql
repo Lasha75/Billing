@@ -1,15 +1,17 @@
 SELECT c.accnumb,
        c.custname,
        t.oper_code,
+       t.mark_code,
        t.mark_date,
        t.enter_date,
        t.status_telasi,
        t.status_telmico,
-       t.oper_motive
+       t.oper_motive,
+       t.oper_type
 FROM   BS.FT_CUT_HISTORY t
 JOIN   bs.tl_customer_v c ON c.custkey = t.custkey
-WHERE  c.accnumb = '7342609'
-ORDER  BY mark_date DESC;
+WHERE  c.accnumb = '0393808'
+ORDER  BY mark_date desc ;
 
 SELECT c.accnumb, 
        ct.CUSTKEY,
@@ -17,17 +19,17 @@ SELECT c.accnumb,
        oper_date,
        mark_date,
        oper_code,
+       mark_code,
        reading,
        discrecstatuskey,
        enter_date_insp,
        enter_date_oper,
        acckey,
-       mark_code,
        stat_tr,
        stat_w
 FROM   bs.tl_cut_history_v ct
 JOIN   bs.tl_customer_v c ON c.custkey = ct.custkey
-WHERE  c.accnumb = '7342609'
+WHERE  c.accnumb = '1688089'
 order by mark_date desc
 
 

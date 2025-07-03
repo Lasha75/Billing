@@ -49,8 +49,8 @@ create temp table upd on commit drop as
      join prx_customer cu on cu.id = tr.customer_id
      --join "LK".tmp_lk t on t.cust_id = tr.customer_id
      where tr.category_id is not null
-       and (tr.trans_date between '2025-04-04' and '2025-06-06'
-            or tr.created_date between '2025-04-04' and '2025-06-06')
+       and (tr.trans_date between '2025-06-04' and current_date or
+            tr.created_date between '2025-06-04' and current_date)
        and tr.give_type_id is null
        and tr.deleted_by is null
        and cu.deleted_by is null
@@ -82,8 +82,8 @@ set give_type_id = tr.give_type_id
 from prx_transaction tr
 -- join "LK".tmp_lk t on t.cust_id = tr.customer_id
 where tr.id = otr.transaction_id
-  and (tr.trans_date between '2025-04-04' and '2025-06-05'
-       or tr.created_date between '2025-04-04' and '2025-06-05')
+  and (tr.trans_date between '2025-06-04' and current_date or
+       tr.created_date between '2025-06-04' and current_date)
   and otr.give_type_id is null
   and tr.give_type_id is not null
 and otr.deleted_by is null;
@@ -110,8 +110,8 @@ from prx_transaction tr
 where tr.id = str.transaction_id
 --     tr.customer_id = str.customer_id
 --   and tr.created_date between  '2025-04-04' and '2025-05-01'
-  and (str.trans_date between '2025-04-04' and '2025-06-05'
-    or str.created_date between '2025-04-04' and '2025-06-05')
+  and (str.trans_date between '2025-06-04' and current_date or
+     str.created_date between '2025-06-04' and current_date)
   and str.give_type_id is null
   and tr.give_type_id is not null
   and str.deleted_by is null
@@ -142,10 +142,10 @@ where st.deleted_by is null
   and offs.give_type_id is null
   and offs.deleted_by is null
   and st.deleted_by is null
-and (st.trans_date between '2025-04-04' and '2025-06-06'
-    or st.created_date between '2025-04-04' and '2025-06-06'
-    or tr.trans_date between '2025-04-04' and '2025-06-06'
-    or tr.created_date between '2025-04-04' and '2025-06-06')
+and (st.trans_date between '2025-06-04' and current_date or
+     st.created_date between '2025-06-04' and current_date or
+     tr.trans_date between '2025-06-04' and current_date or
+     tr.created_date between '2025-06-04' and current_date )
   and offs.connection_uuid = st.connection_uuid
   and offs.amount < 0;
 
@@ -203,8 +203,8 @@ create temp table upd on commit drop as
      join prx_customer cu on cu.id = tr.customer_id
      --join "LK".tmp_lk t on t.cust_id = tr.customer_id
      where tr.category_id is not null
-and (tr.trans_date between '2025-04-04' and '2025-06-06'
-    or tr.created_date between '2025-04-04' and '2025-06-06')
+and (tr.trans_date between '2025-06-04' and current_date or
+    tr.created_date between '2025-06-04' and current_date)
        and tr.give_type_id is null
        and tr.deleted_by is null
        and cu.deleted_by is null
@@ -246,8 +246,8 @@ where st.deleted_by is null
   and offs.give_type_id is null
   and offs.deleted_by is null
   and st.deleted_by is null
-  and (st.created_date between '2025-04-04' and '2025-06-06' or
-       st.trans_date between  '2025-04-04' and '2025-06-06')
+  and (st.created_date between '2025-06-04' and current_date or
+       st.trans_date between  '2025-06-04' and current_date)
   and offs.connection_uuid = st.connection_uuid
 --     and offs.customer_number='2446419'
   and offs.amount > 0;

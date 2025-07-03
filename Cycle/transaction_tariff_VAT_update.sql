@@ -24,8 +24,8 @@ from prx_counter met
 where met.code = tr.counter_number
   and met.deleted_by is null
   and tr.category_id is not null
-  and (tr.created_date between '2025-04-04' and '2025-06-05' or
-       tr.trans_date between '2025-04-04' and '2025-06-05')
+  and (tr.created_date between '2025-06-04' and current_date or
+       tr.trans_date between '2025-06-04' and current_date)
   and tr.tariff_id is null
   and tr.deleted_by is null
   and tr.counter_number is not null
@@ -49,8 +49,8 @@ and tr.created_by = 'mppower'*/;
       from prx_transaction tr
       join prx_tariff tar on tar.id = tr.tariff_id and tar.deleted_by is null
       where tr.category_id is not null
-        and (tr.created_date between  '2025-04-04' and '2025-06-05' or
-             tr.trans_date between  '2025-04-04' and '2025-06-05')
+        and (tr.created_date between  '2025-06-04' and current_date or
+             tr.trans_date between  '2025-06-04' and current_date)
         and tr.vat_type is null
         and tr.deleted_by is null
 /*        and (tr.account_type_id = 'c425684a-1695-fca4-b245-73192da9a52e'--თელმიკო
@@ -83,8 +83,8 @@ set vat_type = tr.vat_type
 from prx_transaction tr
 where tr.id = otr.transaction_id
   and tr.category_id is not null
-  and (tr.created_date between  '2025-04-04' and '2025-06-05' or
-       tr.trans_date between  '2025-04-04' and '2025-06-05')
+  and (tr.created_date between  '2025-06-04' and current_date or
+       tr.trans_date between  '2025-06-04' and current_date)
   and otr.vat_type is null
   and tr.vat_type is not null
   and tr.deleted_by is null
@@ -109,8 +109,8 @@ from prx_transaction tr
 where tr.id = str.transaction_id
   and tr.category_id is not null
   --and tr.created_date between  '2025-02-04' and '2025-03-06'
-  and (tr.created_date between  '2025-04-04' and '2025-06-05' or
-       tr.trans_date between  '2025-04-04' and '2025-06-05')
+  and (tr.created_date between  '2025-06-04' and current_date or
+       tr.trans_date between  '2025-06-04' and current_date)
   and str.vat_type is null
   and tr.vat_type is not null
   and str.deleted_by is null
@@ -127,7 +127,7 @@ where st.deleted_by is null
   and offs.vat_type is null
   and offs.deleted_by is null
   and st.deleted_by is null
-  and (tr.created_date between  '2025-04-04' and '2025-06-05' or
-       tr.trans_date between  '2025-04-04' and '2025-06-05')
+  and (tr.created_date between  '2025-06-04' and current_date or
+       tr.trans_date between  '2025-06-04' and current_date)
   and offs.connection_uuid = st.connection_uuid
   and offs.amount < 0;

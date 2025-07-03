@@ -7,7 +7,6 @@ SELECT blocked_locks.pid                  AS blocked_pid,
        blocked_activity.application_name  AS blocked_application,
        blocking_activity.application_name AS blocking_application
 FROM pg_catalog.pg_locks blocked_locks
-
 JOIN pg_catalog.pg_stat_activity blocked_activity ON blocked_activity.pid = blocked_locks.pid
 JOIN pg_catalog.pg_locks blocking_locks
      ON blocking_locks.locktype = blocked_locks.locktype

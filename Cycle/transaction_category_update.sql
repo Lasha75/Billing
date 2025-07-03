@@ -36,8 +36,8 @@ from prx_customer cu
 where tr.customer_id = cu.id
   and tr.deleted_by is null
   and tr.category_id is null
-  and (tr.created_date between '2025-04-04' and '2025-06-04' or
-       tr.trans_date between '2025-04-04' and '2025-06-04')
+  and (tr.created_date between '2025-06-04' and current_date or
+       tr.trans_date between '2025-06-04' and current_date)
 --   and tr.created_by = 'mppower'
   and cu.category_id is not null;
 
@@ -47,8 +47,8 @@ set category_id = tr.category_id
 from prx_transaction tr
 -- join "LK".tmp_lk t on t.cust_id = tr.customer_id
 where otr.transaction_id = tr.id
-  and (tr.created_date between '2025-05-04' and '2025-06-04' or
-       tr.trans_date between '2025-05-04' and '2025-06-04')
+  and (tr.created_date between '2025-06-04' and current_date or--'2025-07-04' or
+       tr.trans_date between '2025-06-04' and current_date)
   and otr.category_id is null
   and otr.deleted_by is null;
 
@@ -60,9 +60,9 @@ from prx_transaction tr
 where tr.id = str.transaction_id
   and str.category_id is null
   and str.deleted_by is null
-  and (str.created_date between '2025-05-04' and '2025-06-05' or
-       str.trans_date between '2025-05-04' and '2025-06-05'
-      or tr.created_date between '2025-05-04' and '2025-06-05')
+  and (str.created_date between '2025-06-04' and current_date or
+       str.trans_date between '2025-06-04' and current_date or
+       tr.created_date between '2025-06-04' and current_date)
   and str.amount > 0;
 
 
@@ -76,9 +76,9 @@ where st.deleted_by is null
   and st.category_id is not null
   and offs.category_id is null
   and offs.connection_uuid = st.connection_uuid
-  and (offs.created_date between '2025-05-04' and '2025-06-05'
-       or offs.trans_date between '2025-05-04' and '2025-06-05'
-       or tr.created_date between '2025-05-04' and '2025-06-05')
+  and (offs.created_date between '2025-06-04' and current_date or
+        offs.trans_date between '2025-06-04' and current_date or
+        tr.created_date between '2025-06-04' and current_date)
   and offs.amount < 0;
 
 
@@ -93,8 +93,8 @@ where str.customer_id = cu.id
   and str.deleted_by is null
   and str.category_id is null
   and str.amount < 0
-  and (str.created_date between '2025-04-04' and '2025-06-05'
-       or str.trans_date between '2025-04-04' and '2025-06-05')
+  and (str.created_date between '2025-06-04' and current_date or
+        str.trans_date between '2025-06-04' and current_date)
 
 /*and cu.category_id is not null*/;
 -- and tr.customer_number='5194924'

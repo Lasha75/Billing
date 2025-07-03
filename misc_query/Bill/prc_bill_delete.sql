@@ -1,5 +1,4 @@
-create or replace procedure "LK".prc_bill_delete(in p_cust_num text, in p_bill_date date, out p_upd_id smallint,
-                                                 out p_upd_opn_id smallint)
+create or replace procedure "LK".prc_bill_delete(in p_cust_num text, in p_bill_date date)
     language plpgsql
 as
 $$
@@ -10,9 +9,6 @@ declare
 /*    v_upd_id     smallint = 0;
     v_upd_opn_id smallint = 0;*/
 begin
-    p_upd_id = 0;
-    p_upd_opn_id = 0;
-
     for v_rec_bill in select bl.id,
                              bl.customer_id,
                              bl.counter_id,
@@ -40,13 +36,11 @@ begin
 
         end loop;
 
-    raise notice '-----------------------------------------------------------------------------';
 
     for v_rec_tran in
         select *
         from prx_bill_used_transaction
         where customer_id = v_rec_bill.customer_id
---                       and counter_number = v_rec_bill.counter_serial_number
           and generation_id = v_rec_bill.generation_id
           and cast(created_date as date) = p_bill_date
         loop
@@ -59,16 +53,12 @@ begin
                 last_modified_by   = 'lgaprindashvili',
                 last_modified_date = now()
             where id = v_rec_tran.transaction_id;
-            p_upd_id = p_upd_id + 1;
-            raise notice 'Updated trans %', p_upd_id::text;
 
             update public.prx_open_transaction
             set used_in_bill       = null,
                 last_modified_by   = 'lgaprindashvili',
                 last_modified_date = now()
             where transaction_id = v_rec_tran.transaction_id;
-            p_upd_opn_id = p_upd_opn_id + 1;
-            raise notice 'Updated open trans %', p_upd_opn_id::text;
 
             raise notice 'End update trans %' , v_rec_tran.transaction_id;
         end loop;
@@ -79,10 +69,10 @@ exception
         raise exception 'Outer Exception % %', SQLSTATE, SQLERRM;
 end;
 $$;
-alter procedure "LK".prc_bill_delete(text, date, smallint, smallint) owner to "Billing";
+alter procedure "LK".prc_bill_delete(text, date) owner to "Billing";
 
 
-
+commit;
 /*lgaprindashvili*/
 /*
 select bl.created_date,

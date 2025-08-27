@@ -6,12 +6,13 @@ create temp table upd on commit drop as
      join prx_customer cu on cu.customer_number = tr.customer_number
      join prx_counter met on met.cust_key = cu.cust_key and tr.counter_number = met.code
 --      join "LK".tmp_lk t on t.cust_id = tr.customer_id
-     where (tr.created_date between  '2025-06-04' and current_date or--'2025-07-05' or
-           tr.trans_date between  '2025-06-04' and current_date)
+     where (tr.created_date between  '2025-08-04' and current_date or--'2025-07-05' or
+           tr.trans_date between  '2025-08-04' and current_date)
        and tr.deleted_by is null
        and coalesce(tr.voltage, '0')='0'
        and coalesce(tr.kilowatt_hour, 0) !=0
        and coalesce(tr.amount,0) >0
+--      and cu.customer_number in ('1112236', '5137149')
 /*       and (tr.account_type_id = 'c425684a-1695-fca4-b245-73192da9a52e'--თელმიკო
         and tr.account_type_id = '3aeea7c5-6a36-a898-bc82-5a3923c6e9f9'--დეპოზიტი
          or tr.account_type_id = '74a4b43c-2bb1-1321-b7f2-ba06dadc72ae') --თელასი
@@ -39,8 +40,8 @@ set voltage = tr.voltage
 from prx_transaction tr
 -- join "LK".tmp_lk t on t.cust_id = tr.customer_id
 where tr.id = otr.transaction_id
-  and (tr.created_date between  '2025-06-04' and current_date or--'2025-07-05' or
-       tr.trans_date between  '2025-06-04' and current_date/*'2025-07-05'*/)
+  and (tr.created_date between  '2025-08-04' and current_date or--'2025-07-05' or
+       tr.trans_date between  '2025-08-04' and current_date/*'2025-07-05'*/)
   and coalesce(otr.voltage, '0')='0'
   and coalesce(tr.kilowatt_hour, 0) !=0
   and coalesce(tr.amount,0) >0
@@ -66,9 +67,10 @@ where tr.id = str.transaction_id
   and coalesce(str.voltage, '0')='0'
   and coalesce(tr.kilowatt_hour, 0) !=0
   and coalesce(tr.amount,0) > 0
-    and (str.trans_date between '2025-06-04' and current_date or-- '2025-07-04' or
-         str.created_date between '2025-06-04' and current_date/*'2025-07-04'*/)
+    and (str.trans_date between '2025-08-04' and current_date or-- '2025-07-04' or
+         str.created_date between '2025-08-04' and current_date/*'2025-07-04'*/)
 --    and tr.created_by = 'mppower'
+
   and str.amount > 0;
 
 -------------

@@ -49,12 +49,12 @@ create temp table upd on commit drop as
      join prx_customer cu on cu.id = tr.customer_id
      --join "LK".tmp_lk t on t.cust_id = tr.customer_id
      where tr.category_id is not null
-       and (tr.trans_date between '2025-06-04' and current_date or
-            tr.created_date between '2025-06-04' and current_date)
+       and (tr.trans_date between '2025-08-04' and current_date or
+            tr.created_date between '2025-08-04' and current_date)
        and tr.give_type_id is null
        and tr.deleted_by is null
        and cu.deleted_by is null
---         and cu.customer_number='5194924'
+--      and cu.customer_number in ('1112236', '5137149')
 /*       and (tr.account_type_id = 'c425684a-1695-fca4-b245-73192da9a52e'--თელმიკო
         or tr.account_type_id = '3aeea7c5-6a36-a898-bc82-5a3923c6e9f9'--დეპოზიტი
          or tr.account_type_id = '74a4b43c-2bb1-1321-b7f2-ba06dadc72ae') --თელასი*/
@@ -82,8 +82,8 @@ set give_type_id = tr.give_type_id
 from prx_transaction tr
 -- join "LK".tmp_lk t on t.cust_id = tr.customer_id
 where tr.id = otr.transaction_id
-  and (tr.trans_date between '2025-06-04' and current_date or
-       tr.created_date between '2025-06-04' and current_date)
+  and (tr.trans_date between '2025-08-04' and current_date or
+       tr.created_date between '2025-08-04' and current_date)
   and otr.give_type_id is null
   and tr.give_type_id is not null
 and otr.deleted_by is null;
@@ -110,8 +110,8 @@ from prx_transaction tr
 where tr.id = str.transaction_id
 --     tr.customer_id = str.customer_id
 --   and tr.created_date between  '2025-04-04' and '2025-05-01'
-  and (str.trans_date between '2025-06-04' and current_date or
-     str.created_date between '2025-06-04' and current_date)
+  and (str.trans_date between '2025-08-04' and current_date or
+     str.created_date between '2025-08-04' and current_date)
   and str.give_type_id is null
   and tr.give_type_id is not null
   and str.deleted_by is null
@@ -142,10 +142,10 @@ where st.deleted_by is null
   and offs.give_type_id is null
   and offs.deleted_by is null
   and st.deleted_by is null
-and (st.trans_date between '2025-06-04' and current_date or
-     st.created_date between '2025-06-04' and current_date or
-     tr.trans_date between '2025-06-04' and current_date or
-     tr.created_date between '2025-06-04' and current_date )
+and (st.trans_date between '2025-08-04' and current_date or
+     st.created_date between '2025-08-04' and current_date or
+     tr.trans_date between '2025-08-04' and current_date or
+     tr.created_date between '2025-08-04' and current_date )
   and offs.connection_uuid = st.connection_uuid
   and offs.amount < 0;
 
@@ -203,14 +203,16 @@ create temp table upd on commit drop as
      join prx_customer cu on cu.id = tr.customer_id
      --join "LK".tmp_lk t on t.cust_id = tr.customer_id
      where tr.category_id is not null
-and (tr.trans_date between '2025-06-04' and current_date or
-    tr.created_date between '2025-06-04' and current_date)
+and (tr.trans_date between '2025-08-04' and current_date or
+    tr.created_date between '2025-08-04' and current_date)
        and tr.give_type_id is null
        and tr.deleted_by is null
        and cu.deleted_by is null
        and cu.give_type_id is not null
 --        and tr.created_by = 'mppower'
---   and tr.customer_number='2446419'
+/*and tr.customer_number in ('3510329','6201950','7428429','2476396','5905434','3131177','7212768',
+'3510329','2353964','4497075','7400822','4716007','7456308','4212809','6918561','5715764','3349148',
+'7215131','5137149','2443127','7000791','3886548','5928115','2818428')*/
     and tr.amount < 0 );
 
 
@@ -220,7 +222,7 @@ from upd
 where upd.id = tr.id
   and supl is not null;
 
-------------------------------------------------------------
+
 /*update public.prx_settle_transaction str
 set give_type_id = tr.give_type_id
 -- from prx_customer tr
@@ -246,8 +248,10 @@ where st.deleted_by is null
   and offs.give_type_id is null
   and offs.deleted_by is null
   and st.deleted_by is null
-  and (st.created_date between '2025-06-04' and current_date or
-       st.trans_date between  '2025-06-04' and current_date)
+  and (st.created_date between '2025-08-04' and current_date or
+       st.trans_date between  '2025-08-04' and current_date)
   and offs.connection_uuid = st.connection_uuid
---     and offs.customer_number='2446419'
+/*and offs.customer_number in ('3510329','6201950','7428429','2476396','5905434','3131177','7212768',
+'3510329','2353964','4497075','7400822','4716007','7456308','4212809','6918561','5715764','3349148',
+'7215131','5137149','2443127','7000791','3886548','5928115','2818428')*/
   and offs.amount > 0;

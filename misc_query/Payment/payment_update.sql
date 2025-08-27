@@ -27,9 +27,11 @@ select pm.bank_id,
        pm.payment_date,
        pm.customer_number,
         pm.telmico_amount,
-        pm.telasi_amount
+        pm.telasi_amount,
+        pm.is_transaction,
+        pm.is_split
 from prx_payment pm
-where pm.payment_id in ('16140713136');--pm.internal_bank_id = 'LB' and reporting_date = '2025-03-08';--pm.payment_id in ('1');-- --
+where pm.payment_id in ('16782273475');--pm.internal_bank_id = 'LB' and reporting_date = '2025-03-08';--pm.payment_id in ('1');-- --
 
 
 
@@ -51,9 +53,11 @@ select tr.bank_code,
        tr.amount,
        tr.reporting_date,
        tr.customer_number,
-       id
+       id,
+       deleted_by,
+       deleted_date
 from prx_transaction tr
-where tr.payment_doc_number in ('16140713136')--tr.bank_code = 'LB' and reporting_date = '2025-03-27'--
+where tr.payment_doc_number in ('16782273475')--tr.bank_code = 'LB' and reporting_date = '2025-03-27'--
 and tr.deleted_by is null;
 --
 /*update prx_transaction
@@ -72,37 +76,19 @@ where bank_code = 'LB' and reporting_date = '2025-03-27';*/
   --*/
 
 
-select st.settle_date, tr.trans_date, st.trans_date, st.created_date, tr.aviso_date, tr.read_date, * from prx_settle_transaction st
+select st.settle_date,
+       tr.trans_date,
+       reporting_date,
+       st.trans_date,
+       st.created_date,
+       tr.aviso_date,
+       tr.read_date, *
+from prx_settle_transaction st
 join prx_transaction tr on st.transaction_id = tr.id
-where st.customer_number in ('5593217',
-'4964523',
-'4964499',
-'4964541',
-'4964202',
-'4964453',
-'4964514',
-'5494921',
-'5191302',
-'5466015',
-'5593208',
-'5593191',
-'5718404',
-'5718440',
-'6456845',
-'4964550',
-'5718413',
-'4964480',
-'4964444',
-'5028392',
-'4964471',
-'5593235',
-'5593226',
-'5593244',
-'5523980',
-'4964532'
-) --tr.payment_doc_number in ('25610863716')
+where tr.payment_doc_number in ('28318632012')
+    --st.customer_number in ('4813795') --
 and tr.deleted_by is null and st.deleted_by is null
-order by 1 desc
+order by 1 desc;
 
 
 

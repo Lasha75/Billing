@@ -1,4 +1,5 @@
-create or replace procedure "LK".prc_bill_delete(in p_cust_num text, in p_bill_date date)
+create or replace procedure "LK".prc_bill_delete(in p_cust_num text, in p_bill_date date, p_user text,
+                                                 p_bill_id text = null)
     language plpgsql
 as
 $$
@@ -6,8 +7,6 @@ declare
     v_rec_bill record   = null;
     v_rec_tran record   = null;
     v_cnt      smallint = 1;
-/*    v_upd_id     smallint = 0;
-    v_upd_opn_id smallint = 0;*/
 begin
     for v_rec_bill in select bl.id,
                              bl.customer_id,
@@ -19,48 +18,49 @@ begin
                       where customer_number = p_cust_num
                         and cast(bl.created_date as date) = p_bill_date
                         and deleted_by is null
+                        and (bl.id::text = p_bill_id or p_bill_id is null)
         loop
             raise notice 'prx_bill. metter serial: %  amount: % bill id: % cust id: % generation id:%  metter id: % ', v_rec_bill.counter_serial_number, v_rec_bill.amount, v_rec_bill.id, v_rec_bill.customer_id, v_rec_bill.generation_id, v_rec_bill.counter_id;
 
             raise notice 'Start update bill % #%', v_rec_bill.id, v_cnt;
 
             update prx_bill
-            set deleted_by   = 'lgaprindashvili',
+            set deleted_by   = p_user,
                 deleted_date = now()
             where id = v_rec_bill.id;
 
+            ----transactions---
+            for v_rec_tran in
+                select *
+                from prx_bill_used_transaction
+                where customer_id = v_rec_bill.customer_id
+                  and generation_id = v_rec_bill.generation_id
+                  and cast(created_date as date) = p_bill_date
+                loop
+                    raise notice 'prx_bill_used_transaction id: %  transaction id: %', v_rec_tran.id, v_rec_tran.transaction_id;
+
+                    raise notice 'Start update trans %' , v_rec_tran.transaction_id;
+
+                    update public.prx_transaction
+                    set used_in_bill       = null,
+                        last_modified_by   = p_user,
+                        last_modified_date = now()
+                    where id = v_rec_tran.transaction_id;
+
+                    update public.prx_open_transaction
+                    set used_in_bill       = null,
+                        last_modified_by   = p_user,
+                        last_modified_date = now()
+                    where transaction_id = v_rec_tran.transaction_id;
+
+                    raise notice 'End update trans %' , v_rec_tran.transaction_id;
+                end loop;
+            ---------
             raise notice 'End update bill % #%', v_rec_bill.id, v_cnt;
 
             v_cnt = v_cnt + 1;
             raise notice '---- next bill № % ----', v_cnt;
 
-        end loop;
-
-
-    for v_rec_tran in
-        select *
-        from prx_bill_used_transaction
-        where customer_id = v_rec_bill.customer_id
-          and generation_id = v_rec_bill.generation_id
-          and cast(created_date as date) = p_bill_date
-        loop
-            raise notice 'prx_bill_used_transaction id: %  transaction id: %', v_rec_tran.id, v_rec_tran.transaction_id;
-
-            raise notice 'Start update trans %' , v_rec_tran.transaction_id;
-
-            update public.prx_transaction
-            set used_in_bill       = null,
-                last_modified_by   = 'lgaprindashvili',
-                last_modified_date = now()
-            where id = v_rec_tran.transaction_id;
-
-            update public.prx_open_transaction
-            set used_in_bill       = null,
-                last_modified_by   = 'lgaprindashvili',
-                last_modified_date = now()
-            where transaction_id = v_rec_tran.transaction_id;
-
-            raise notice 'End update trans %' , v_rec_tran.transaction_id;
         end loop;
 
 exception
@@ -69,7 +69,7 @@ exception
         raise exception 'Outer Exception % %', SQLSTATE, SQLERRM;
 end;
 $$;
-alter procedure "LK".prc_bill_delete(text, date) owner to "Billing";
+alter procedure "LK".prc_bill_delete(text, date, text, text) owner to "Billing";
 
 
 commit;

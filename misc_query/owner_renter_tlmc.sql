@@ -16,9 +16,14 @@ left join prx_owner_type ownt on own.owner_type_id = ownt.id
 where own.deleted_by is null;
 
 /*renter*/
-select cu.customer_number, ot.name, pbi.*
+select cu.customer_number,
+       ot.name,
+--        act.name,
+       pbi.*
 from prx_beneficiary_information pbi
 left join public.prx_customer cu on pbi.customer_id = cu.id
 left join prx_owner_type ot on pbi.owner_type_id = ot.id
+-- left join prx_activity act on cu.activity_id = act.id
 where pbi.deleted_by is null
-and cu.deleted_by is null;
+and cu.deleted_by is null
+-- and cu.activity_id = '5e6480b3-977d-f617-b0b4-28a3c3518027';

@@ -1,8 +1,9 @@
 select cu.customer_number,
-       cu.social_municipality
+       cu.social_municipality,
+       cu.social_category_pensioner
 from prx_customer cu
 -- right join "LK".ttt on cu.customer_number = ttt.pid
-where cu.social_municipality
+where cu.social_municipality or cu.social_category_pensioner
     and cu.customer_number not in (select pid from "LK".ttt);
 
 select cu.customer_number

@@ -30,10 +30,10 @@ FROM   bs.tl_route_store_v t
 RIGHT  JOIN bs.tl_customer_v c ON c.custkey = t.CUSTKEY
 RIGHT  JOIN bs.tl_account_v ac ON ac.custkey = c.CUSTKEY --(ac.acckey = t.ACCKEY)
 RIGHT  JOIN bs.tl_customer_owner_v co ON co.custkey = t.CUSTKEY
-JOIN   bs.tl_billoperation_v bo ON bo.billoperkey = t.NEW_RDTYPE
+left JOIN   bs.tl_billoperation_v bo ON bo.billoperkey = t.NEW_RDTYPE
 LEFT   JOIN bs.tl_billoperation_v bo1 ON bo1.billoperkey = t.PRV_RDTYPE
 LEFT   JOIN bs.tl_cust_alt_mobiles_v am ON am.custkey = t.custkey
-WHERE  c.accnumb IN ('1536332')
+WHERE  c.accnumb IN ('5958234')
        OR ac.acckey IN (); --ცილლური
 
 SELECT cu.accnumb,
@@ -61,6 +61,8 @@ FROM bs.tl_route_store_v rs
 LEFT JOIN bs.tl_customer_v cu ON cu.custkey = rs.CUSTKEY 
 WHERE cu.accnumb in ('3384965'); --rs.custkey IN (1005519), 1007671);
 
+
+--owner, renter----
 SELECT ow.custkey,
        cu.accnumb,
        first_name,
@@ -76,7 +78,7 @@ SELECT ow.custkey,
        status
 FROM   bs.tl_customer_owner_v ow
 LEFT   JOIN bs.tl_customer_v cu ON cu.custkey = ow.custkey
-WHERE  cu.accnumb IN ('8482297');
+WHERE  cu.accnumb IN ('8331334', '7352679');
 
 SELECT re.custkey,
        cu.accnumb,
@@ -90,17 +92,27 @@ SELECT re.custkey,
        enter_date
 FROM   bs.tl_customer_rental_v re
 JOIN bs.tl_customer_v cu ON cu.custkey = re.custkey
-WHERE  cu.accnumb in ('2047911');
-
+WHERE  cu.accnumb in ('8331334', '7352679');
+---------
 
 select * from bs.tl_disconn_balance_v;
---mp
+-----mp----
 select cu.accnumb,
+        cu.custname,
         mp.* ,
         bo.billopername
 from bs.tl_mpitem_v mp
 join bs.tl_customer_v cu on cu.custkey = mp.custkey
 JOIN   bs.tl_billoperation_v bo ON bo.billoperkey = mp.billoperkey
 where cu.accnumb='7193547' and mp.itemdate = '30-jun-2025'
+------
+
+select * from bs.tl_cust_bill_notification_v bn
+where bn.ACCNUMB='5265875';
+
+
+select * from bs.tl_customer_v cu
+where cu.accnumb='8302160';
+
 
 
